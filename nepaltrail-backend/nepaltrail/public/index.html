@@ -7,6 +7,8 @@
 <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
 <style>
@@ -82,16 +84,6 @@
   .route-body{padding:14px}
   .route-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:4px}
   .route-meta{font-size:12px;color:var(--muted);display:flex;gap:12px}
-  .map-container{background:var(--mountain);border-radius:14px;overflow:hidden;position:relative;height:480px}
-  .map-placeholder{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:rgba(255,255,255,0.4)}
-  .map-placeholder-icon{font-size:64px;opacity:0.3}
-  .map-overlay-card{position:absolute;bottom:20px;left:20px;right:20px;background:rgba(255,255,255,0.95);backdrop-filter:blur(8px);border-radius:12px;padding:16px}
-  .checkpoint-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border)}
-  .checkpoint-row:last-child{border-bottom:none}
-  .checkpoint-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
-  .checkpoint-dot.done{background:var(--forest)}
-  .checkpoint-dot.current{background:var(--saffron);box-shadow:0 0 0 3px rgba(232,137,12,0.25)}
-  .checkpoint-dot.upcoming{background:var(--border)}
   .qr-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:500px;gap:24px}
   .qr-viewport{width:280px;height:280px;border:2px solid var(--saffron);border-radius:16px;background:#111;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
   .qr-corner{position:absolute;width:24px;height:24px;border-color:var(--saffron);border-style:solid}
@@ -146,33 +138,46 @@
   .achievement-desc{font-size:12px;color:var(--muted)}
   .rank-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;background:linear-gradient(135deg,var(--saffron),#f4a020);color:#fff;border-radius:20px;font-size:12px;font-weight:600;font-family:'Syne',sans-serif}
   .weather-banner{background:linear-gradient(135deg,var(--mountain),#2980B9);color:#fff;border-radius:12px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
-  .mapbox-embed{width:100%;height:100%;border:none}
-  .location-pin{position:absolute;cursor:pointer;transform:translate(-50%,-50%)}
-  .pin-dot{width:12px;height:12px;border-radius:50%;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.3)}
-  .tooltip-popup{position:absolute;background:#fff;border-radius:8px;padding:8px 12px;font-size:12px;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,0.15);z-index:10;pointer-events:none}
-  .trek-map{position:relative;background:#1a3a2a;border-radius:14px;overflow:hidden;height:500px}
-  .trek-svg{width:100%;height:100%}
-  .info-panel{background:rgba(255,255,255,0.95);border-radius:12px;position:absolute;right:12px;top:12px;width:200px;padding:14px;font-size:12px}
-  .legend-item{display:flex;align-items:center;gap:6px;margin-bottom:6px;font-size:11px;color:var(--text2)}
-  .legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
-  .breadcrumb-path{stroke-dasharray:6,4;animation:dash 20s linear infinite}
-  @keyframes dash{to{stroke-dashoffset:-200}}
+  .checkpoint-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border)}
+  .checkpoint-row:last-child{border-bottom:none}
+  .checkpoint-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+  .checkpoint-dot.done{background:var(--forest)}
+  .checkpoint-dot.current{background:var(--saffron);box-shadow:0 0 0 3px rgba(232,137,12,0.25)}
+  .checkpoint-dot.upcoming{background:var(--border)}
   .feedback-item{padding:14px;border-bottom:1px solid var(--border)}
   .feedback-item:last-child{border-bottom:none}
   .scrollable-list{max-height:320px;overflow-y:auto}
   .empty-state{text-align:center;padding:48px 24px;color:var(--muted)}
   .empty-state i{font-size:48px;display:block;margin-bottom:12px;opacity:0.4}
   .notify-dot{width:8px;height:8px;background:var(--crimson);border-radius:50%;display:inline-block;margin-left:4px}
+  /* Leaflet map styles */
+  #leaflet-map{width:100%;height:520px;border-radius:14px;z-index:1}
+  .route-tab{padding:7px 14px;border-radius:7px;font-size:12px;cursor:pointer;color:var(--text2);transition:all 0.15s;border:1px solid transparent;background:transparent;font-family:'DM Sans',sans-serif;font-weight:500}
+  .route-tab.on{background:var(--mountain);color:#fff;border-color:var(--mountain)}
+  .cp-list{max-height:320px;overflow-y:auto}
+  .cp-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);cursor:pointer}
+  .cp-row:last-child{border-bottom:none}
+  .cp-row:hover{background:rgba(0,0,0,0.02);border-radius:6px;padding:9px 6px}
+  .cp-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+  .cp-dot.done{background:var(--forest)}
+  .cp-dot.next{background:var(--saffron);box-shadow:0 0 0 3px rgba(232,137,12,0.25)}
+  .cp-dot.lock{background:var(--border)}
+  .leaflet-popup-content-wrapper{border-radius:12px!important;box-shadow:0 4px 20px rgba(0,0,0,0.15)!important}
+  .leaflet-popup-content{margin:14px 16px!important;font-family:'DM Sans',sans-serif!important}
+  .pop-title{font-family:'Syne',sans-serif;font-weight:700;font-size:14px;margin-bottom:4px}
+  .pop-meta{font-size:12px;color:var(--text2);margin-bottom:8px}
+  .pop-btn{background:var(--saffron);color:#fff;border:none;padding:6px 12px;border-radius:7px;font-size:12px;cursor:pointer;font-weight:500;width:100%;font-family:'DM Sans',sans-serif}
+  .pop-btn.done-btn{background:var(--forest)}
 </style>
 </head>
 <body>
 <div id="root"></div>
 <script type="text/babel">
-const {useState,useEffect,useRef} = React;
+const {useState,useEffect,useRef,useCallback} = React;
 
 // ── API layer ──────────────────────────────────────────────────────────────
 const API = {
-  base: '',  // same-origin — served by Flask
+  base: '',
   async req(method, path, body){
     const opts = { method, headers: {'Content-Type':'application/json'} };
     if(body) opts.body = JSON.stringify(body);
@@ -186,11 +191,47 @@ const API = {
   put:    (p, body) => API.req('PUT',    p, body),
 };
 
+// ── 25 Real EBC checkpoints (from new map system) ─────────────────────────
+const CHECKPOINTS = [
+  {id:'lukla',name:'Lukla Airport',lat:27.6869,lng:86.7314,alt:'2,860m',credits:15,type:'start',route:'ebc',icon:'🛩️',desc:'Gateway to Everest. Most flights from Kathmandu land here.',risk:'low'},
+  {id:'phakding',name:'Phakding Village',lat:27.7267,lng:86.7133,alt:'2,610m',credits:20,type:'village',route:'ebc',icon:'🏡',desc:'Picturesque village by the Dudh Koshi river.',risk:'low'},
+  {id:'monjo',name:'Monjo Gate',lat:27.7847,lng:86.7244,alt:'2,835m',credits:20,type:'checkpoint',route:'ebc',icon:'🚪',desc:'Entry point to Sagarmatha National Park.',risk:'low'},
+  {id:'namche',name:'Namche Bazaar',lat:27.8063,lng:86.7139,alt:'3,440m',credits:35,type:'hub',route:'ebc',icon:'🏪',desc:'The Sherpa capital. Acclimatization stop. Internet, shops, bakeries.',risk:'low'},
+  {id:'khumjung',name:'Khumjung Village',lat:27.8249,lng:86.7233,alt:'3,790m',credits:25,type:'village',route:'ebc',icon:'🏘️',desc:'Traditional Sherpa village near the Hillary School.',risk:'low'},
+  {id:'tengboche',name:'Tengboche Monastery',lat:27.8362,lng:86.7635,alt:'3,860m',credits:40,type:'monastery',route:'ebc',icon:'⛩️',desc:'Famous monastery with views of Ama Dablam and Everest.',risk:'moderate'},
+  {id:'pangboche',name:'Pangboche',lat:27.8569,lng:86.7950,alt:'3,985m',credits:30,type:'village',route:'ebc',icon:'🏔️',desc:'Last permanent settlement before high altitude zones.',risk:'moderate'},
+  {id:'pheriche',name:'Pheriche Aid Post',lat:27.8924,lng:86.8132,alt:'4,371m',credits:40,type:'medical',route:'ebc',icon:'🩺',desc:'Himalayan Rescue Association aid post. Mandatory altitude check.',risk:'moderate'},
+  {id:'dingboche',name:'Dingboche',lat:27.8971,lng:86.8319,alt:'4,410m',credits:40,type:'village',route:'ebc',icon:'🏕️',desc:'Side valley with Makalu and Nuptse views.',risk:'moderate'},
+  {id:'lobuche',name:'Lobuche',lat:27.9431,lng:86.8102,alt:'4,940m',credits:55,type:'checkpoint',route:'ebc',icon:'⛺',desc:'High camp. Acclimatization. Cold nights guaranteed.',risk:'high'},
+  {id:'gorakshep',name:'Gorak Shep',lat:27.9800,lng:86.8293,alt:'5,164m',credits:60,type:'hub',route:'ebc',icon:'🏔️',desc:'Last tea houses. Base for EBC and Kala Patthar.',risk:'high'},
+  {id:'ebc',name:'Everest Base Camp',lat:28.0025,lng:86.8519,alt:'5,364m',credits:150,type:'summit',route:'ebc',icon:'🏔️',desc:'The legendary base camp. Khumbu Icefall starts here.',risk:'high'},
+  {id:'besisahar',name:'Besisahar',lat:28.2344,lng:84.3720,alt:'760m',credits:15,type:'start',route:'abc',icon:'🚌',desc:'Starting point of Annapurna Circuit. Bus hub.',risk:'low'},
+  {id:'chame',name:'Chame',lat:28.5591,lng:84.2356,alt:'2,670m',credits:25,type:'hub',route:'abc',icon:'🏢',desc:'District HQ of Manang. Apple orchards everywhere.',risk:'low'},
+  {id:'pisang',name:'Upper Pisang',lat:28.6003,lng:84.1097,alt:'3,300m',credits:30,type:'village',route:'abc',icon:'🏠',desc:'Dramatic medieval-era village with great Annapurna views.',risk:'low'},
+  {id:'manang',name:'Manang Valley',lat:28.6667,lng:84.0167,alt:'3,519m',credits:40,type:'hub',route:'abc',icon:'🏔️',desc:'Mandatory 2-day acclimatization stop. Yak cheese!',risk:'moderate'},
+  {id:'thorong_la',name:'Thorong La Pass',lat:28.7844,lng:83.9411,alt:'5,416m',credits:120,type:'summit',route:'abc',icon:'🏔️',desc:'Highest point of Annapurna Circuit. Breathtaking 360° views.',risk:'high'},
+  {id:'muktinath',name:'Muktinath Temple',lat:28.8172,lng:83.8697,alt:'3,800m',credits:45,type:'monastery',route:'abc',icon:'⛩️',desc:'Sacred Hindu-Buddhist site. 108 water spouts.',risk:'moderate'},
+  {id:'jomsom',name:'Jomsom Airport',lat:28.7806,lng:83.7267,alt:'2,750m',credits:30,type:'hub',route:'abc',icon:'✈️',desc:'Flights back to Pokhara. Mustang entry point.',risk:'low'},
+  {id:'syabru',name:'Syabrubesi',lat:28.1650,lng:85.3356,alt:'1,503m',credits:15,type:'start',route:'langtang',icon:'🚌',desc:'Starting village. Bus from Kathmandu.',risk:'low'},
+  {id:'lama_hotel',name:'Lama Hotel',lat:28.1997,lng:85.3994,alt:'2,380m',credits:20,type:'village',route:'langtang',icon:'🏡',desc:'Dense rhododendron forest. Red panda territory.',risk:'low'},
+  {id:'mundu',name:'Mundu',lat:28.2233,lng:85.4500,alt:'3,543m',credits:30,type:'village',route:'langtang',icon:'🏔️',desc:'Flat valley section. Glacial views open up.',risk:'low'},
+  {id:'kyanjin',name:'Kyanjin Gompa',lat:28.2128,lng:85.5631,alt:'3,870m',credits:55,type:'summit',route:'langtang',icon:'⛩️',desc:'Famous monastery and cheese factory at valley end.',risk:'moderate'},
+  {id:'dole',name:'Dole',lat:27.8706,lng:86.6922,alt:'4,040m',credits:35,type:'village',route:'gokyo',icon:'🏕️',desc:'Yak pastures. First high-altitude stop on Gokyo trail.',risk:'moderate'},
+  {id:'gokyo',name:'Gokyo Lakes & Ri',lat:27.9603,lng:86.6817,alt:'4,750m',credits:90,type:'summit',route:'gokyo',icon:'🌊',desc:'Sacred turquoise lakes. Gokyo Ri has the best Everest panorama.',risk:'high'},
+];
+
+const ROUTES_META = {
+  ebc:{name:'Everest Base Camp',color:'#2980B9',emoji:'🏔️'},
+  abc:{name:'Annapurna Circuit',color:'#2D6A4F',emoji:'⛰️'},
+  langtang:{name:'Langtang Valley',color:'#8B3A8B',emoji:'🌿'},
+  gokyo:{name:'Gokyo Lakes',color:'#C0392B',emoji:'🌊'},
+};
+
 const ROUTES = [
-  {id:'ebc',name:'Everest Base Camp',emoji:'🏔️',days:14,diff:'Hard',dist:'130 km',elev:'5,364m',region:'Khumbu',checkpoints:['Lukla','Phakding','Namche Bazaar','Tengboche','Dingboche','Lobuche','Gorak Shep','Base Camp'],color:'#1B3A5C'},
-  {id:'abc',name:'Annapurna Circuit',emoji:'⛰️',days:21,diff:'Moderate',dist:'160 km',elev:'5,416m',region:'Gandaki',checkpoints:['Besisahar','Chame','Manang','Thorong La','Muktinath','Jomsom','Tatopani','Pokhara'],color:'#2D6A4F'},
-  {id:'langtang',name:'Langtang Valley',emoji:'🌿',days:7,diff:'Easy',dist:'60 km',elev:'3,870m',region:'Bagmati',checkpoints:['Syabrubesi','Lama Hotel','Mundu','Kyanjin Gompa'],color:'#8B3A3A'},
-  {id:'mardi',name:'Mardi Himal',emoji:'🌄',days:5,diff:'Easy',dist:'38 km',elev:'4,500m',region:'Gandaki',checkpoints:['Phedi','Forest Camp','High Camp','Base Camp'],color:'#5C3A8B'},
+  {id:'ebc',name:'Everest Base Camp',emoji:'🏔️',days:14,diff:'Hard',dist:'130 km',elev:'5,364m',region:'Khumbu',color:'#1B3A5C'},
+  {id:'abc',name:'Annapurna Circuit',emoji:'⛰️',days:21,diff:'Moderate',dist:'160 km',elev:'5,416m',region:'Gandaki',color:'#2D6A4F'},
+  {id:'langtang',name:'Langtang Valley',emoji:'🌿',days:7,diff:'Easy',dist:'60 km',elev:'3,870m',region:'Bagmati',color:'#8B3A3A'},
+  {id:'gokyo',name:'Gokyo Lakes',emoji:'🌊',days:10,diff:'Hard',dist:'80 km',elev:'4,750m',region:'Khumbu',color:'#5C3A8B'},
 ];
 
 const ACCOMMODATIONS = [
@@ -216,15 +257,7 @@ const TRANSPORT = [
   {name:'Sunauli → Pokhara',type:'Tourist Bus',duration:'5 hr',price:'$8',seats:12,dep:'08:00',emoji:'🚌'},
 ];
 
-const QR_LOCATIONS = [
-  {id:'namche',name:'Namche Bazaar',coords:{x:220,y:180},credits:20,type:'checkpoint',alt:'3,440m',verified:true},
-  {id:'tengboche',name:'Tengboche Monastery',coords:{x:260,y:150},credits:25,type:'checkpoint',alt:'3,860m',verified:false},
-  {id:'dingboche',name:'Dingboche',coords:{x:290,y:125},credits:30,type:'checkpoint',alt:'4,410m',verified:false},
-  {id:'lobuche',name:'Lobuche',coords:{x:310,y:100},credits:35,type:'checkpoint',alt:'4,940m',verified:false},
-  {id:'ebc',name:'Everest Base Camp',coords:{x:340,y:75},credits:100,type:'summit',alt:'5,364m',verified:false},
-];
-
-// ── Auth Screen ────────────────────────────────────────────────────────────
+// ── Auth Screen ──────────────────────────────────────────────────────────
 function AuthScreen({onLogin}){
   const [isReg,setIsReg]=useState(false);
   const [form,setForm]=useState({name:'',email:'',password:''});
@@ -242,7 +275,6 @@ function AuthScreen({onLogin}){
     setLoading(false);
   }
 
-  // Quick demo login
   async function demoLogin(){
     setErr(''); setLoading(true);
     try{
@@ -294,12 +326,13 @@ function AuthScreen({onLogin}){
   );
 }
 
+// ── Main App ───────────────────────────────────────────────────────────────
 function App(){
   const [authed,setAuthed]=useState(false);
   const [page,setPage]=useState('dashboard');
   const [user,setUser]=useState(null);
   const [modal,setModal]=useState(null);
-  const [selectedRoute,setSelectedRoute]=useState(ROUTES[0]);
+  const [activeRoute,setActiveRoute]=useState('ebc');
   const [sosStep,setSosStep]=useState(0);
   const [sosType,setSosType]=useState('');
   const [symptoms,setSymptoms]=useState([]);
@@ -308,71 +341,84 @@ function App(){
   const [bookings,setBookings]=useState([]);
   const [feedbacks,setFeedbacks]=useState([]);
   const [activeTab,setActiveTab]=useState(0);
-  const [mapHover,setMapHover]=useState(null);
-  const [visitedCheckpoints,setVisitedCheckpoints]=useState([]);
+  const [visitedCheckpoints,setVisitedCheckpoints]=useState(['lukla']);
 
-  // Derived from user
   const credits = user?.credits ?? 0;
 
-  // Load bookings & feedbacks & checkins on login
   useEffect(()=>{
     if(!user) return;
     API.get(`/api/bookings?user_id=${user.id}`).then(d=>setBookings(d.bookings)).catch(()=>{});
     API.get('/api/feedbacks').then(d=>setFeedbacks(d.feedbacks)).catch(()=>{});
     API.get(`/api/checkins?user_id=${user.id}`).then(d=>{
-      setVisitedCheckpoints(d.checkins.map(c=>c.checkpoint_id));
+      const ids = d.checkins.map(c=>c.checkpoint_id);
+      setVisitedCheckpoints(prev=>[...new Set([...prev,...ids])]);
     }).catch(()=>{});
   },[user]);
 
   function onLogin(u){ setUser(u); setAuthed(true); }
 
+  function getNextCheckpoint(route){
+    const routeCPs = CHECKPOINTS.filter(c=>c.route===route);
+    return routeCPs.find(c=>!visitedCheckpoints.includes(c.id))||null;
+  }
+
+  async function doCheckIn(cpId){
+    if(visitedCheckpoints.includes(cpId)) return {ok:false,msg:'Already checked in here!'};
+    const cp = CHECKPOINTS.find(c=>c.id===cpId);
+    if(!cp) return {ok:false,msg:'Unknown checkpoint'};
+    setVisitedCheckpoints(v=>[...v,cpId]);
+    setUser(u=>u?({...u,credits:(u.credits||0)+cp.credits}):u);
+    if(user){
+      try{
+        await API.post('/api/checkins',{
+          user_id:user.id,
+          checkpoint_id:cp.id,
+          checkpoint_name:cp.name,
+          altitude:cp.alt,
+          credits_earned:cp.credits,
+        });
+      }catch(e){}
+    }
+    return {ok:true,cp};
+  }
+
   async function simulateScan(){
-    if(!user) return;
     setQrState('scanning');
     setTimeout(async()=>{
-      const loc=QR_LOCATIONS.find(q=>!visitedCheckpoints.includes(q.id)&&q.id!=='ebc')||QR_LOCATIONS[1];
+      const nextCP = getNextCheckpoint(activeRoute);
+      const loc = nextCP || CHECKPOINTS.find(c=>c.route===activeRoute);
       setLastQR(loc);
-      try{
-        const data = await API.post('/api/checkins',{
-          user_id:user.id,
-          checkpoint_id:loc.id,
-          checkpoint_name:loc.name,
-          altitude:loc.alt,
-          credits_earned:loc.credits,
-        });
-        setUser(u=>({...u,credits:data.credits}));
-        setVisitedCheckpoints(v=>[...v,loc.id]);
-      }catch(e){
-        // Already checked in — still show success UI
-        setUser(u=>({...u,credits:u.credits+loc.credits}));
+      const result = await doCheckIn(loc.id);
+      if(result.ok){
+        setQrState('success');
+        setTimeout(()=>setQrState('idle'),4000);
+      } else {
+        setQrState('idle');
       }
-      setQrState('success');
-      setTimeout(()=>setQrState('idle'),4000);
     },2000);
   }
 
   async function addBooking(item,type){
-    if(!user){ setModal({type:'booked',item,btype:type}); return; }
     try{
-      const data = await API.post('/api/bookings',{
-        user_id:user.id,
-        item_name:item.name,
-        item_type:type,
-        price:item.price||'',
-        emoji:item.emoji||'📋',
-      });
-      setBookings(b=>[data.booking,...b]);
-      setModal({type:'booked',item,btype:type,ref:data.ref});
+      if(user){
+        const data = await API.post('/api/bookings',{
+          user_id:user.id,
+          item_name:item.name,
+          item_type:type,
+          price:item.price||'',
+          emoji:item.emoji||'📋',
+        });
+        setBookings(b=>[data.booking,...b]);
+        setModal({type:'booked',item,btype:type,ref:data.ref});
+      } else {
+        setModal({type:'booked',item,btype:type});
+      }
     }catch(e){ alert(e.message); }
   }
 
   async function submitFeedback(data){
     try{
-      const res = await API.post('/api/feedbacks',{
-        ...data,
-        user_id:user?.id,
-        user_name:user?.name||'Anonymous',
-      });
+      const res = await API.post('/api/feedbacks',{...data,user_id:user?.id,user_name:user?.name||'Anonymous'});
       setFeedbacks(f=>[res.feedback,...f]);
       setModal(null);
     }catch(e){ alert(e.message); }
@@ -380,23 +426,13 @@ function App(){
 
   async function submitSOS(){
     if(user){
-      try{
-        await API.post('/api/sos',{
-          user_id:user.id,
-          user_name:user.name,
-          sos_type:sosType,
-          symptoms,
-          latitude:27.9881,
-          longitude:86.9250,
-        });
-      }catch(e){}
+      try{ await API.post('/api/sos',{user_id:user.id,user_name:user.name,sos_type:sosType,symptoms,latitude:27.9881,longitude:86.9250}); }catch(e){}
     }
     setModal({type:'sos_sent'});
     setSosStep(0);setSosType('');setSymptoms([]);
   }
 
   if(!authed) return <AuthScreen onLogin={onLogin}/>;
-
 
   const navItems=[
     {id:'dashboard',icon:'ti-home',label:'Dashboard'},
@@ -410,15 +446,6 @@ function App(){
     {id:'profile',icon:'ti-user',label:'My Profile',section:'Account'},
   ];
 
-  let grouped=[];
-  let curr=[];
-  navItems.forEach(n=>{
-    if(n.section&&curr.length){grouped.push(curr);curr=[{...n,isHeader:true}]}
-    else if(n.section){curr.push({...n,isHeader:true})}
-    else curr.push(n);
-  });
-  if(curr.length)grouped.push(curr);
-
   return (
     <div className="app">
       <div className="sidebar">
@@ -427,19 +454,16 @@ function App(){
           <div className="logo-sub">Smart Tourism Platform</div>
         </div>
         <div className="sidebar-nav">
-          {navItems.map((n,i)=>{
-            const prev=navItems[i-1];
-            return (
-              <React.Fragment key={n.id}>
-                {n.section&&<div className="nav-section">{n.section}</div>}
-                <div className={`nav-item${page===n.id?' active':''}`} onClick={()=>setPage(n.id)}>
-                  <i className={`ti ${n.icon}`}></i>
-                  {n.label}
-                  {n.id==='sos'&&<span style={{marginLeft:'auto',fontSize:'10px',background:'#c0392b',color:'#fff',borderRadius:'10px',padding:'1px 6px'}}>SOS</span>}
-                </div>
-              </React.Fragment>
-            );
-          })}
+          {navItems.map(n=>(
+            <React.Fragment key={n.id}>
+              {n.section&&<div className="nav-section">{n.section}</div>}
+              <div className={`nav-item${page===n.id?' active':''}`} onClick={()=>setPage(n.id)}>
+                <i className={`ti ${n.icon}`}></i>
+                {n.label}
+                {n.id==='sos'&&<span style={{marginLeft:'auto',fontSize:'10px',background:'#c0392b',color:'#fff',borderRadius:'10px',padding:'1px 6px'}}>SOS</span>}
+              </div>
+            </React.Fragment>
+          ))}
         </div>
         <div className="sidebar-credits">
           <div className="credit-badge">💠 {credits}</div>
@@ -452,9 +476,7 @@ function App(){
 
       <div className="main">
         <div className="topbar">
-          <div className="topbar-title">
-            {navItems.find(n=>n.id===page)?.label||'Dashboard'}
-          </div>
+          <div className="topbar-title">{navItems.find(n=>n.id===page)?.label||'Dashboard'}</div>
           <div className="topbar-right">
             <div className="tag tag-green"><i className="ti ti-shield-check" style={{fontSize:13}}></i> Verified Tourist</div>
             <button className="btn btn-ghost btn-sm" onClick={()=>{setAuthed(false);setUser(null);}}>
@@ -465,9 +487,9 @@ function App(){
         </div>
 
         <div className="content">
-          {page==='dashboard'&&<Dashboard credits={credits} user={user} setPage={setPage} selectedRoute={selectedRoute} bookings={bookings} visitedCheckpoints={visitedCheckpoints}/>}
-          {page==='map'&&<TrekMap routes={ROUTES} selectedRoute={selectedRoute} setSelectedRoute={setSelectedRoute} mapHover={mapHover} setMapHover={setMapHover} qrLocations={QR_LOCATIONS} visitedCheckpoints={visitedCheckpoints} setModal={setModal}/>}
-          {page==='qr'&&<QRScan qrState={qrState} simulateScan={simulateScan} lastQR={lastQR} credits={credits}/>}
+          {page==='dashboard'&&<Dashboard credits={credits} user={user} setPage={setPage} bookings={bookings} visitedCheckpoints={visitedCheckpoints}/>}
+          {page==='map'&&<TrekMap activeRoute={activeRoute} setActiveRoute={setActiveRoute} visitedCheckpoints={visitedCheckpoints} doCheckIn={doCheckIn} getNextCheckpoint={getNextCheckpoint}/>}
+          {page==='qr'&&<QRScan qrState={qrState} simulateScan={simulateScan} lastQR={lastQR} credits={credits} visitedCheckpoints={visitedCheckpoints} activeRoute={activeRoute}/>}
           {page==='transport'&&<Transport items={TRANSPORT} addBooking={addBooking}/>}
           {page==='accommodation'&&<Accommodation items={ACCOMMODATIONS} addBooking={addBooking} activeTab={activeTab} setActiveTab={setActiveTab}/>}
           {page==='guides'&&<Guides items={GUIDES} addBooking={addBooking}/>}
@@ -482,7 +504,215 @@ function App(){
   );
 }
 
-function Dashboard({credits,user,setPage,selectedRoute,bookings,visitedCheckpoints}){
+// ── LEAFLET MAP COMPONENT ──────────────────────────────────────────────────
+function TrekMap({activeRoute,setActiveRoute,visitedCheckpoints,doCheckIn,getNextCheckpoint}){
+  const mapRef = useRef(null);
+  const leafletRef = useRef(null);
+  const markersRef = useRef({});
+  const [mapReady, setMapReady] = useState(false);
+  const [notify, setNotify] = useState(null);
+
+  function showNotify(msg, type='success'){
+    setNotify({msg,type});
+    setTimeout(()=>setNotify(null), 3000);
+  }
+
+  const initMap = useCallback((route)=>{
+    if(leafletRef.current){ leafletRef.current.remove(); leafletRef.current=null; markersRef.current={}; }
+
+    const centers = {
+      ebc:[27.85,86.75], abc:[28.55,84.05], langtang:[28.2,85.45], gokyo:[27.91,86.68]
+    };
+    const zooms = { ebc:11, abc:9, langtang:11, gokyo:11 };
+
+    const map = L.map('leaflet-map',{zoomControl:true}).setView(centers[route]||centers.ebc, zooms[route]||11);
+    leafletRef.current = map;
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+      attribution:'© OpenStreetMap contributors', maxZoom:18
+    }).addTo(map);
+
+    try {
+      L.tileLayer('https://tiles.wmflabs.org/hillshading/{z}/{x}/{y}.png',{
+        opacity:0.3, maxZoom:17, errorTileUrl:''
+      }).addTo(map);
+    } catch(e){}
+
+    const routeCPs = CHECKPOINTS.filter(c=>c.route===route);
+    const nextCP = getNextCheckpoint(route);
+
+    // Draw full route polyline (dashed)
+    const allLatLngs = routeCPs.map(c=>[c.lat,c.lng]);
+    if(allLatLngs.length>1){
+      L.polyline(allLatLngs,{color:ROUTES_META[route].color,weight:3,opacity:0.5,dashArray:'6,5'}).addTo(map);
+    }
+    // Draw completed portion (solid)
+    const doneLatLngs = routeCPs.filter(c=>visitedCheckpoints.includes(c.id)).map(c=>[c.lat,c.lng]);
+    if(doneLatLngs.length>1){
+      L.polyline(doneLatLngs,{color:'#2D6A4F',weight:4,opacity:0.9}).addTo(map);
+    }
+
+    // Add markers
+    routeCPs.forEach(cp=>{
+      const done = visitedCheckpoints.includes(cp.id);
+      const isNext = nextCP?.id===cp.id;
+      const markerColor = done?'#2D6A4F':isNext?'#E8890C':'#8B8680';
+      const size = cp.type==='summit'?22:cp.type==='hub'?18:14;
+
+      const icon = L.divIcon({
+        className:'',
+        html:`<div style="
+          width:${size}px;height:${size}px;
+          background:${markerColor};
+          border:2.5px solid #fff;
+          border-radius:50%;
+          box-shadow:0 2px 8px rgba(0,0,0,0.3);
+          display:flex;align-items:center;justify-content:center;
+          font-size:${size*0.55}px;
+          ${isNext?'animation:nt-pulse 1.5s ease-in-out infinite;':''}
+        ">${done?'✓':isNext?'→':''}</div>
+        <style>@keyframes nt-pulse{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(232,137,12,0.4)}50%{transform:scale(1.2);box-shadow:0 0 0 6px rgba(232,137,12,0)}}</style>`,
+        iconSize:[size,size],
+        iconAnchor:[size/2,size/2],
+      });
+
+      const marker = L.marker([cp.lat,cp.lng],{icon}).addTo(map);
+      markersRef.current[cp.id]=marker;
+
+      const riskColor = cp.risk==='high'?'#fde8e8':cp.risk==='moderate'?'#fdecd0':'#d4edda';
+      const riskText = cp.risk==='high'?'#8b1a1a':cp.risk==='moderate'?'#7a4000':'#1a5c2e';
+
+      const checkInBtn = done
+        ? `<div style="background:#d4edda;color:#1a5c2e;padding:6px 10px;border-radius:7px;font-size:12px;text-align:center;font-weight:500">✓ Checked In (+${cp.credits} credits)</div>`
+        : `<button class="pop-btn${done?' done-btn':''}" id="checkin-${cp.id}" style="margin-top:2px">${isNext?'🎯 Check In Here':'+'+cp.credits+' credits — Check In'}</button>`;
+
+      marker.bindPopup(`
+        <div class="pop-title">${cp.icon} ${cp.name}</div>
+        <div class="pop-meta">📍 ${cp.alt} &nbsp;·&nbsp; ${cp.route.toUpperCase()}</div>
+        <div style="font-size:12px;color:#5C5752;margin-bottom:8px;line-height:1.5">${cp.desc}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="font-size:12px;font-weight:600;color:#E8890C">+${cp.credits} credits</span>
+          <span style="font-size:11px;padding:2px 7px;background:${riskColor};color:${riskText};border-radius:10px">${cp.risk} risk</span>
+        </div>
+        ${checkInBtn}
+      `,{maxWidth:220});
+
+      marker.on('popupopen',()=>{
+        const btn = document.getElementById(`checkin-${cp.id}`);
+        if(btn) btn.onclick = async()=>{
+          const result = await doCheckIn(cp.id);
+          if(result.ok){
+            showNotify(`✅ ${cp.name} — +${cp.credits} credits!`,'success');
+            map.closePopup();
+            setTimeout(()=>initMap(route),300);
+          } else {
+            showNotify(result.msg,'warn');
+          }
+        };
+      });
+    });
+
+    // Fit bounds
+    if(allLatLngs.length>0){
+      try{ map.fitBounds(allLatLngs,{padding:[30,30]}); }catch(e){}
+    }
+    setMapReady(true);
+  },[visitedCheckpoints, doCheckIn, getNextCheckpoint]);
+
+  useEffect(()=>{
+    const timer = setTimeout(()=>initMap(activeRoute),80);
+    return ()=>{ clearTimeout(timer); if(leafletRef.current){leafletRef.current.remove();leafletRef.current=null;} };
+  },[activeRoute]);
+
+  // Re-init when visited changes (new check-in)
+  useEffect(()=>{
+    if(leafletRef.current) setTimeout(()=>initMap(activeRoute),100);
+  },[visitedCheckpoints]);
+
+  function flyTo(cpId){
+    const cp = CHECKPOINTS.find(c=>c.id===cpId);
+    if(!cp||!leafletRef.current) return;
+    leafletRef.current.setView([cp.lat,cp.lng],14);
+    if(markersRef.current[cpId]) markersRef.current[cpId].openPopup();
+  }
+
+  const routeCPs = CHECKPOINTS.filter(c=>c.route===activeRoute);
+  const nextCP = getNextCheckpoint(activeRoute);
+  const done = routeCPs.filter(c=>visitedCheckpoints.includes(c.id)).length;
+
+  return(
+    <div>
+      {/* Route tabs */}
+      <div style={{display:'flex',gap:8,marginBottom:14,flexWrap:'wrap',alignItems:'center'}}>
+        {Object.entries(ROUTES_META).map(([id,r])=>{
+          const cnt = CHECKPOINTS.filter(c=>c.route===id&&visitedCheckpoints.includes(c.id)).length;
+          const tot = CHECKPOINTS.filter(c=>c.route===id).length;
+          return(
+            <button key={id} className={`route-tab${activeRoute===id?' on':''}`} onClick={()=>setActiveRoute(id)}>
+              {r.emoji} {r.name}
+              <span style={{fontSize:10,marginLeft:4,opacity:0.7}}>{cnt}/{tot}</span>
+            </button>
+          );
+        })}
+        <div style={{marginLeft:'auto',display:'flex',gap:10,fontSize:12,alignItems:'center',color:'var(--text2)'}}>
+          <span style={{display:'flex',alignItems:'center',gap:4}}><span style={{width:10,height:10,borderRadius:'50%',background:'#2D6A4F',display:'inline-block'}}></span>Visited</span>
+          <span style={{display:'flex',alignItems:'center',gap:4}}><span style={{width:10,height:10,borderRadius:'50%',background:'#E8890C',display:'inline-block'}}></span>Next</span>
+          <span style={{display:'flex',alignItems:'center',gap:4}}><span style={{width:10,height:10,borderRadius:'50%',background:'#8B8680',display:'inline-block'}}></span>Upcoming</span>
+        </div>
+      </div>
+
+      <div className="alert alert-warn" style={{marginBottom:12}}>
+        <i className="ti ti-info-circle" style={{fontSize:17,marginTop:1}}></i>
+        <div>Click any checkpoint marker to view details and check in. Real GPS + QR verification on physical trail.</div>
+      </div>
+
+      {/* Notification toast */}
+      {notify&&(
+        <div style={{
+          position:'fixed',bottom:24,right:24,
+          background:notify.type==='success'?'#2D6A4F':'#8B6914',
+          color:'#fff',padding:'14px 18px',borderRadius:12,
+          fontSize:13,zIndex:9999,maxWidth:300,
+          boxShadow:'0 4px 20px rgba(0,0,0,0.2)'
+        }}>{notify.msg}</div>
+      )}
+
+      {/* Leaflet Map */}
+      <div id="leaflet-map" ref={mapRef}></div>
+
+      {/* Checkpoint list below map */}
+      <div style={{marginTop:20}}>
+        <div className="section-title">Checkpoints — {ROUTES_META[activeRoute].name} ({done}/{routeCPs.length})</div>
+        <div className="card">
+          <div className="cp-list">
+            {routeCPs.map(c=>{
+              const isDone = visitedCheckpoints.includes(c.id);
+              const isNext = nextCP?.id===c.id;
+              return(
+                <div key={c.id} className="cp-row" onClick={()=>flyTo(c.id)}>
+                  <div className={`cp-dot ${isDone?'done':isNext?'next':'lock'}`}></div>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:13,fontWeight:isNext?600:400,color:isNext?'var(--saffron)':isDone?'var(--text)':'var(--muted)'}}>
+                      {c.icon} {c.name}
+                    </div>
+                    <div style={{fontSize:11,color:'var(--muted)'}}>{c.alt} · {c.type}</div>
+                  </div>
+                  <span style={{fontSize:11,padding:'2px 7px',borderRadius:10,background:c.risk==='high'?'#fde8e8':c.risk==='moderate'?'#fdecd0':'#d4edda',color:c.risk==='high'?'#8b1a1a':c.risk==='moderate'?'#7a4000':'#1a5c2e',marginRight:8}}>{c.risk}</span>
+                  <div style={{fontSize:12,fontWeight:600,color:isDone?'var(--forest)':'var(--saffron)',minWidth:60,textAlign:'right'}}>
+                    {isDone?'✓ Done':'+'+c.credits+' cr'}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Dashboard ──────────────────────────────────────────────────────────────
+function Dashboard({credits,user,setPage,bookings,visitedCheckpoints}){
   const checkinCount = visitedCheckpoints?.length ?? 0;
   return(
     <div>
@@ -502,7 +732,7 @@ function Dashboard({credits,user,setPage,selectedRoute,bookings,visitedCheckpoin
         {[
           {label:'Trail Credits',val:`💠 ${credits}`,meta:`Rank: ${user?.rank||'Trail Starter'}`,color:'var(--saffron)'},
           {label:'Active Trek',val:'EBC Route',meta:'Day 3 of 14',color:'var(--mountain)'},
-          {label:'QR Check-ins',val:checkinCount,meta:checkinCount>0?`Last: ${visitedCheckpoints.slice(-1)[0]||''}`: 'None yet',color:'var(--forest)'},
+          {label:'QR Check-ins',val:checkinCount,meta:checkinCount>0?'Keep going!':'None yet',color:'var(--forest)'},
           {label:'Bookings',val:`${bookings.length}`,meta:'Upcoming trips',color:'var(--sky)'},
         ].map(s=>(
           <div className="stat-card" key={s.label}>
@@ -569,9 +799,7 @@ function Dashboard({credits,user,setPage,selectedRoute,bookings,visitedCheckpoin
           <div className="route-card" key={r.id}>
             <div className="route-img" style={{background:`linear-gradient(135deg,${r.color},#2980B9)`}}>
               <span style={{fontSize:40}}>{r.emoji}</span>
-              <div className="route-img-overlay">
-                <span className="route-difficulty">{r.diff}</span>
-              </div>
+              <div className="route-img-overlay"><span className="route-difficulty">{r.diff}</span></div>
             </div>
             <div className="route-body">
               <div className="route-name">{r.name}</div>
@@ -588,191 +816,16 @@ function Dashboard({credits,user,setPage,selectedRoute,bookings,visitedCheckpoin
   );
 }
 
-function TrekMap({routes,selectedRoute,setSelectedRoute,qrLocations,visitedCheckpoints,setModal}){
-  const [hoveredPin,setHoveredPin]=useState(null);
-
-  const routeColors={ebc:'#60A5FA',abc:'#34D399',langtang:'#F87171',mardi:'#A78BFA'};
-
-  const routePoints={
-    ebc:[{x:140,y:380},{x:170,y:330},{x:220,y:280},{x:260,y:240},{x:290,y:200},{x:320,y:170},{x:345,y:145},{x:370,y:120}],
-    abc:[{x:80,y:400},{x:120,y:360},{x:160,y:310},{x:190,y:260},{x:200,y:200},{x:190,y:150},{x:160,y:110},{x:120,y:80}],
-    langtang:[{x:300,y:400},{x:320,y:360},{x:340,y:320},{x:350,y:280}],
-    mardi:[{x:180,y:420},{x:200,y:380},{x:215,y:340},{x:225,y:300}],
-  };
-
-  const icons=[
-    {x:220,y:280,type:'hotel',label:'Namche Lodge',icon:'🏨',id:'namche'},
-    {x:260,y:240,type:'medical',label:'Tengboche Medical',icon:'🩺',id:'tengboche'},
-    {x:290,y:200,type:'danger',label:'Altitude Risk Zone',icon:'⚠️',id:'risk1'},
-    {x:320,y:170,type:'hotel',label:'Lobuche Tea House',icon:'🏡',id:'lobuche'},
-    {x:370,y:120,type:'summit',label:'Everest Base Camp',icon:'🏔️',id:'ebc'},
-    {x:80,y:400,type:'hotel',label:'Besisahar Hotel',icon:'🏨',id:'besisahar'},
-    {x:200,y:200,type:'danger',label:'Thorong La Pass Risk',icon:'⚠️',id:'thorong'},
-  ];
-
-  function pathD(pts){
-    if(!pts||!pts.length)return'';
-    return pts.map((p,i)=>i===0?`M${p.x},${p.y}`:`L${p.x},${p.y}`).join(' ');
-  }
-
-  return(
-    <div>
-      <div style={{display:'flex',gap:12,marginBottom:20,flexWrap:'wrap'}}>
-        {routes.map(r=>(
-          <button key={r.id} className={`btn ${selectedRoute.id===r.id?'btn-primary':'btn-ghost'}`} onClick={()=>setSelectedRoute(r)}>
-            {r.emoji} {r.name}
-          </button>
-        ))}
-      </div>
-
-      <div className="grid2">
-        <div style={{gridColumn:'1/3'}}>
-          <div className="trek-map">
-            <svg viewBox="0 0 500 480" className="trek-svg">
-              <defs>
-                <radialGradient id="bgGrad" cx="50%" cy="50%">
-                  <stop offset="0%" stopColor="#1a3a2a"/>
-                  <stop offset="100%" stopColor="#0d1f18"/>
-                </radialGradient>
-              </defs>
-              <rect width="500" height="480" fill="url(#bgGrad)"/>
-
-              {/* Terrain texture */}
-              {Array.from({length:30},(_,i)=>(
-                <ellipse key={i} cx={Math.sin(i*137.5)*200+250} cy={Math.cos(i*137.5)*180+240}
-                  rx={20+i%5*8} ry={10+i%3*5} fill="rgba(255,255,255,0.02)" />
-              ))}
-
-              {/* Grid lines */}
-              {[100,200,300,400].map(x=>(
-                <line key={'vg'+x} x1={x} y1={0} x2={x} y2={480} stroke="rgba(255,255,255,0.04)" strokeWidth="1"/>
-              ))}
-              {[100,200,300,400].map(y=>(
-                <line key={'hg'+y} x1={0} y1={y} x2={500} y2={y} stroke="rgba(255,255,255,0.04)" strokeWidth="1"/>
-              ))}
-
-              {/* All route paths (dim) */}
-              {Object.entries(routePoints).map(([id,pts])=>(
-                <path key={id} d={pathD(pts)} fill="none"
-                  stroke={selectedRoute.id===id?routeColors[id]:'rgba(255,255,255,0.12)'}
-                  strokeWidth={selectedRoute.id===id?3:1.5} strokeLinecap="round" strokeLinejoin="round"
-                />
-              ))}
-
-              {/* Breadcrumb for selected */}
-              {selectedRoute&&routePoints[selectedRoute.id]&&(
-                <path d={pathD(routePoints[selectedRoute.id].slice(0,3))} fill="none"
-                  stroke={routeColors[selectedRoute.id]} strokeWidth={4} strokeLinecap="round"
-                  strokeOpacity={0.9} className="breadcrumb-path"
-                />
-              )}
-
-              {/* QR Location dots */}
-              {qrLocations.filter(q=>visitedCheckpoints.includes(q.id)).map(q=>(
-                <g key={q.id}>
-                  <circle cx={q.coords.x} cy={q.coords.y} r={8} fill="#34D399" fillOpacity={0.3}/>
-                  <circle cx={q.coords.x} cy={q.coords.y} r={4} fill="#34D399"/>
-                </g>
-              ))}
-
-              {/* Icons */}
-              {icons.map(icon=>(
-                <g key={icon.id} style={{cursor:'pointer'}}
-                  onMouseEnter={()=>setHoveredPin(icon)}
-                  onMouseLeave={()=>setHoveredPin(null)}
-                  onClick={()=>setModal({type:'mappin',data:icon})}>
-                  <circle cx={icon.x} cy={icon.y} r={16}
-                    fill={hoveredPin?.id===icon.id?'rgba(255,255,255,0.2)':'rgba(0,0,0,0.4)'}
-                    stroke="rgba(255,255,255,0.3)" strokeWidth="1"/>
-                  <text x={icon.x} y={icon.y+5} textAnchor="middle" fontSize="13">{icon.icon}</text>
-                </g>
-              ))}
-
-              {/* Hover tooltip */}
-              {hoveredPin&&(
-                <g>
-                  <rect x={hoveredPin.x-60} y={hoveredPin.y-40} width={120} height={24} rx={6}
-                    fill="rgba(255,255,255,0.95)"/>
-                  <text x={hoveredPin.x} y={hoveredPin.y-24} textAnchor="middle"
-                    fontSize="11" fill="#1a1714" fontFamily="DM Sans,sans-serif">{hoveredPin.label}</text>
-                </g>
-              )}
-
-              {/* Checkpoint labels on selected route */}
-              {selectedRoute&&routePoints[selectedRoute.id]&&routePoints[selectedRoute.id].map((pt,i)=>(
-                <g key={i}>
-                  <circle cx={pt.x} cy={pt.y} r={5}
-                    fill={i<3?routeColors[selectedRoute.id]:'rgba(255,255,255,0.3)'}
-                    stroke={routeColors[selectedRoute.id]} strokeWidth={1.5}/>
-                  {i%2===0&&(
-                    <text x={pt.x+8} y={pt.y+4} fontSize="9" fill="rgba(255,255,255,0.6)"
-                      fontFamily="DM Sans,sans-serif">
-                      {selectedRoute.checkpoints[i]||''}
-                    </text>
-                  )}
-                </g>
-              ))}
-
-              {/* Compass */}
-              <g transform="translate(460,440)">
-                <circle r={18} fill="rgba(0,0,0,0.5)" stroke="rgba(255,255,255,0.2)" strokeWidth="1"/>
-                <text textAnchor="middle" y={-6} fontSize="8" fill="rgba(255,255,255,0.7)">N</text>
-                <line x1={0} y1={-12} x2={0} y2={-3} stroke="white" strokeWidth="1.5"/>
-                <line x1={0} y1={3} x2={0} y2={12} stroke="rgba(255,255,255,0.4)" strokeWidth="1"/>
-              </g>
-            </svg>
-
-            {/* Info Panel */}
-            <div className="info-panel">
-              <div style={{fontFamily:'Syne,sans-serif',fontWeight:700,fontSize:13,marginBottom:8}}>
-                {selectedRoute.name}
-              </div>
-              <div style={{fontSize:11,color:'var(--text2)',marginBottom:8}}>
-                {selectedRoute.days} days · {selectedRoute.dist} · {selectedRoute.elev}
-              </div>
-              <div style={{borderTop:'1px solid var(--border)',paddingTop:8}}>
-                {[
-                  {color:'#60A5FA',label:'Route'},
-                  {color:'#34D399',label:'Visited'},
-                  {color:'#FCD34D',label:'Hotels'},
-                  {color:'#F87171',label:'Risk Zone'},
-                ].map(l=>(
-                  <div className="legend-item" key={l.label}>
-                    <div className="legend-dot" style={{background:l.color}}></div>
-                    <span>{l.label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div style={{marginTop:20}}>
-        <div className="section-title">Route Checkpoints — {selectedRoute.name}</div>
-        <div style={{display:'flex',gap:10,overflowX:'auto',paddingBottom:8}}>
-          {selectedRoute.checkpoints.map((cp,i)=>(
-            <div key={cp} className="card-sm" style={{minWidth:140,flexShrink:0}}>
-              <div style={{fontSize:20,marginBottom:6}}>{i===0?'🚩':i===selectedRoute.checkpoints.length-1?'🏁':'📍'}</div>
-              <div style={{fontFamily:'Syne,sans-serif',fontSize:13,fontWeight:700}}>{cp}</div>
-              <div style={{fontSize:11,color:'var(--muted)',marginTop:2}}>Stop {i+1}</div>
-              {i<2&&<div className="tag tag-green" style={{marginTop:6,fontSize:10}}>✓ Passed</div>}
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function QRScan({qrState,simulateScan,lastQR,credits}){
+// ── QR Scan ────────────────────────────────────────────────────────────────
+function QRScan({qrState,simulateScan,lastQR,credits,visitedCheckpoints,activeRoute}){
+  const routeCPs = CHECKPOINTS.filter(c=>c.route===activeRoute);
+  const done = routeCPs.filter(c=>visitedCheckpoints.includes(c.id)).length;
   return(
     <div>
       <div className="alert alert-warn">
         <i className="ti ti-info-circle" style={{fontSize:18,marginTop:1}}></i>
         <div>QR codes are location-verified. Scanning only works within 100m of the actual checkpoint.</div>
       </div>
-
       <div className="grid2">
         <div>
           <div className="qr-screen">
@@ -795,7 +848,6 @@ function QRScan({qrState,simulateScan,lastQR,credits}){
               <div className="qr-corner bl"></div>
               <div className="qr-corner br"></div>
             </div>
-
             <div style={{textAlign:'center'}}>
               <div style={{fontFamily:'Syne,sans-serif',fontSize:20,fontWeight:700,marginBottom:4}}>
                 {qrState==='scanning'?'Scanning...':qrState==='success'?'Check-in Complete!':'Ready to Check-in'}
@@ -805,7 +857,6 @@ function QRScan({qrState,simulateScan,lastQR,credits}){
                  qrState==='scanning'?'Verifying location and timestamp...':
                  `+${lastQR?.credits} credits earned!`}
               </div>
-
               {qrState==='idle'&&(
                 <button className="btn btn-primary" style={{padding:'12px 28px',fontSize:15}} onClick={simulateScan}>
                   <i className="ti ti-camera"></i> Start Camera Scan
@@ -821,42 +872,40 @@ function QRScan({qrState,simulateScan,lastQR,credits}){
             </div>
           </div>
         </div>
-
         <div>
-          <div className="section-title">Check-in History</div>
-          <div className="card">
-            {QR_LOCATIONS.slice(0,3).map((q,i)=>(
-              <div key={q.id} style={{display:'flex',alignItems:'center',gap:12,padding:'10px 0',borderBottom:i<2?'1px solid var(--border)':'none'}}>
-                <div style={{width:36,height:36,borderRadius:8,background:i===0?'#34D399':i===1?'var(--saffron)':'var(--border)',display:'flex',alignItems:'center',justifyContent:'center',color:i<2?'#fff':'var(--muted)',fontSize:16}}>
-                  <i className={i===0?'ti ti-check':'ti ti-map-pin'}></i>
+          <div className="section-title">Route Progress</div>
+          <div className="card" style={{marginBottom:16}}>
+            {Object.entries(ROUTES_META).map(([id,r])=>{
+              const cnt = CHECKPOINTS.filter(c=>c.route===id&&visitedCheckpoints.includes(c.id)).length;
+              const tot = CHECKPOINTS.filter(c=>c.route===id).length;
+              const pct = Math.round((cnt/tot)*100);
+              return(
+                <div key={id} style={{marginBottom:12}}>
+                  <div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}>
+                    <span style={{fontSize:13,fontWeight:500}}>{r.emoji} {r.name}</span>
+                    <span style={{fontSize:12,color:'var(--muted)'}}>{cnt}/{tot}</span>
+                  </div>
+                  <div className="progress-bar"><div className="progress-fill" style={{width:`${pct}%`,background:r.color}}></div></div>
                 </div>
-                <div style={{flex:1}}>
-                  <div style={{fontSize:13,fontWeight:600}}>{q.name}</div>
-                  <div style={{fontSize:11,color:'var(--muted)'}}>Alt: {q.alt}</div>
-                </div>
-                <div style={{textAlign:'right'}}>
-                  <div style={{fontSize:13,fontWeight:600,color:'var(--saffron)'}}>+{q.credits}</div>
-                  <div style={{fontSize:11,color:'var(--muted)'}}>credits</div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
-
-          <div style={{marginTop:20}}>
-            <div className="section-title">QR Code Locations</div>
-            {QR_LOCATIONS.map(q=>(
-              <div key={q.id} className="card-sm" style={{marginBottom:8,display:'flex',alignItems:'center',gap:12}}>
-                <div style={{width:10,height:10,borderRadius:'50%',background:q.id==='namche'?'#34D399':q.id==='ebc'?'var(--gold)':'var(--border)',flexShrink:0}}></div>
-                <div style={{flex:1}}>
-                  <div style={{fontSize:13,fontWeight:600}}>{q.name}</div>
-                  <div style={{fontSize:11,color:'var(--muted)'}}>{q.alt}</div>
+          <div className="section-title">Checkpoints</div>
+          <div className="card">
+            <div style={{maxHeight:300,overflowY:'auto'}}>
+              {routeCPs.map((q,i)=>(
+                <div key={q.id} style={{display:'flex',alignItems:'center',gap:12,padding:'10px 0',borderBottom:i<routeCPs.length-1?'1px solid var(--border)':'none'}}>
+                  <div style={{width:34,height:34,borderRadius:8,background:visitedCheckpoints.includes(q.id)?'#34D399':'var(--border)',display:'flex',alignItems:'center',justifyContent:'center',color:visitedCheckpoints.includes(q.id)?'#fff':'var(--muted)',fontSize:16}}>
+                    {visitedCheckpoints.includes(q.id)?'✓':q.icon}
+                  </div>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:13,fontWeight:600}}>{q.name}</div>
+                    <div style={{fontSize:11,color:'var(--muted)'}}>{q.alt}</div>
+                  </div>
+                  <div style={{fontSize:13,fontWeight:600,color:'var(--saffron)'}}>+{q.credits}</div>
                 </div>
-                <div className={`tag ${q.id==='namche'?'tag-green':q.id==='ebc'?'tag-orange':'tag-gray'}`} style={{fontSize:11}}>
-                  {q.id==='namche'?'Visited':q.id==='ebc'?'Summit':'Pending'}
-                </div>
-                <div style={{fontSize:12,fontWeight:600,color:'var(--saffron)'}}>+{q.credits}</div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -864,6 +913,7 @@ function QRScan({qrState,simulateScan,lastQR,credits}){
   );
 }
 
+// ── Transport ──────────────────────────────────────────────────────────────
 function Transport({items,addBooking}){
   return(
     <div>
@@ -880,8 +930,7 @@ function Transport({items,addBooking}){
                 <div style={{fontFamily:'Syne,sans-serif',fontWeight:700,fontSize:15,marginBottom:2}}>{t.name}</div>
                 <div className="tag tag-blue" style={{marginBottom:6}}>{t.type}</div>
                 <div style={{fontSize:12,color:'var(--muted)',display:'flex',gap:16}}>
-                  <span>🕐 {t.dep}</span>
-                  <span>⏱ {t.duration}</span>
+                  <span>🕐 {t.dep}</span><span>⏱ {t.duration}</span>
                 </div>
               </div>
             </div>
@@ -901,6 +950,7 @@ function Transport({items,addBooking}){
   );
 }
 
+// ── Accommodation ──────────────────────────────────────────────────────────
 function Accommodation({items,addBooking,activeTab,setActiveTab}){
   const tabs=['All','Hotels','Tea Houses','Homestays'];
   const filtered=activeTab===0?items:items.filter(i=>{
@@ -931,9 +981,7 @@ function Accommodation({items,addBooking,activeTab,setActiveTab}){
                 <div className="stars">{'★'.repeat(Math.floor(a.rating))}</div>
               </div>
               <div style={{fontSize:11,color:'var(--muted)',marginBottom:10}}>{a.reviews} reviews</div>
-              <button className="btn btn-primary btn-sm" style={{width:'100%'}} onClick={()=>addBooking(a,'accommodation')}>
-                Book Stay
-              </button>
+              <button className="btn btn-primary btn-sm" style={{width:'100%'}} onClick={()=>addBooking(a,'accommodation')}>Book Stay</button>
             </div>
           </div>
         ))}
@@ -942,6 +990,7 @@ function Accommodation({items,addBooking,activeTab,setActiveTab}){
   );
 }
 
+// ── Guides ────────────────────────────────────────────────────────────────
 function Guides({items,addBooking}){
   return(
     <div>
@@ -952,9 +1001,7 @@ function Guides({items,addBooking}){
       <div style={{display:'grid',gap:16}}>
         {items.map(g=>(
           <div className="guide-card" key={g.name}>
-            <div className="guide-avatar">
-              <i className="ti ti-user" style={{fontSize:22}}></i>
-            </div>
+            <div className="guide-avatar"><i className="ti ti-user" style={{fontSize:22}}></i></div>
             <div className="guide-info">
               <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:2}}>
                 <div className="guide-name">{g.name}</div>
@@ -963,15 +1010,11 @@ function Guides({items,addBooking}){
               </div>
               <div className="guide-meta">{g.exp} years · {g.langs.join(' · ')}</div>
               <div style={{display:'flex',gap:4,marginBottom:8,flexWrap:'wrap'}}>
-                {g.routes.map(r=>(
-                  <span key={r} className="tag tag-blue" style={{fontSize:11}}>{r}</span>
-                ))}
+                {g.routes.map(r=>(<span key={r} className="tag tag-blue" style={{fontSize:11}}>{r}</span>))}
               </div>
               <div className="stars">{'★'.repeat(Math.floor(g.rating))} <span style={{color:'var(--muted)',fontSize:12}}>({g.reviews} reviews)</span></div>
             </div>
-            <button className="btn btn-primary btn-sm" style={{flexShrink:0}} onClick={()=>addBooking(g,'guide')}>
-              Hire Guide
-            </button>
+            <button className="btn btn-primary btn-sm" style={{flexShrink:0}} onClick={()=>addBooking(g,'guide')}>Hire Guide</button>
           </div>
         ))}
       </div>
@@ -979,6 +1022,7 @@ function Guides({items,addBooking}){
   );
 }
 
+// ── SOS ───────────────────────────────────────────────────────────────────
 function SOSPage({sosStep,setSosStep,sosType,setSosType,symptoms,setSymptoms,setModal,submitSOS,user}){
   const types=[
     {id:'altitude',icon:'ti-lungs',label:'Altitude Sickness'},
@@ -987,20 +1031,13 @@ function SOSPage({sosStep,setSosStep,sosType,setSosType,symptoms,setSymptoms,set
     {id:'avalanche',icon:'ti-snowflake',label:'Avalanche / Weather'},
   ];
   const altSymptoms=['Headache','Dizziness','Nausea','Breathlessness','Confusion','Fatigue','Vomiting'];
-
-  function toggleSymptom(s){
-    setSymptoms(prev=>prev.includes(s)?prev.filter(x=>x!==s):[...prev,s]);
-  }
-
+  function toggleSymptom(s){setSymptoms(p=>p.includes(s)?p.filter(x=>x!==s):[...p,s]);}
   return(
     <div>
       <div className="alert alert-danger">
         <i className="ti ti-sos" style={{fontSize:22,marginTop:1}}></i>
-        <div>
-          <strong>Emergency System Active.</strong> SOS packets are saved offline and transmitted when signal is available via nearest relay.
-        </div>
+        <div><strong>Emergency System Active.</strong> SOS packets saved offline, transmitted when signal found.</div>
       </div>
-
       <div className="grid2">
         <div>
           <div className="card" style={{border:'2px solid var(--crimson)'}}>
@@ -1013,7 +1050,6 @@ function SOSPage({sosStep,setSosStep,sosType,setSosType,symptoms,setSymptoms,set
                 <div style={{fontSize:12,color:'var(--muted)'}}>Step {sosStep+1} of 3</div>
               </div>
             </div>
-
             {sosStep===0&&(
               <div>
                 <div className="form-label">Select emergency type:</div>
@@ -1025,31 +1061,21 @@ function SOSPage({sosStep,setSosStep,sosType,setSosType,symptoms,setSymptoms,set
                     </div>
                   ))}
                 </div>
-                <button className="btn btn-danger" style={{width:'100%',marginTop:16}} disabled={!sosType} onClick={()=>setSosStep(1)}>
-                  Continue →
-                </button>
+                <button className="btn btn-danger" style={{width:'100%',marginTop:16}} disabled={!sosType} onClick={()=>setSosStep(1)}>Continue →</button>
               </div>
             )}
-
             {sosStep===1&&(
               <div>
                 <div className="form-label" style={{marginBottom:10}}>Select symptoms:</div>
                 <div className="symptoms" style={{marginBottom:16}}>
-                  {altSymptoms.map(s=>(
-                    <div key={s} className={`symptom-chip${symptoms.includes(s)?' selected':''}`} onClick={()=>toggleSymptom(s)}>
-                      {s}
-                    </div>
-                  ))}
+                  {altSymptoms.map(s=>(<div key={s} className={`symptom-chip${symptoms.includes(s)?' selected':''}`} onClick={()=>toggleSymptom(s)}>{s}</div>))}
                 </div>
                 <div style={{display:'flex',gap:8}}>
                   <button className="btn btn-ghost" onClick={()=>setSosStep(0)}>← Back</button>
-                  <button className="btn btn-danger" style={{flex:1}} onClick={()=>setSosStep(2)}>
-                    Build SOS Packet →
-                  </button>
+                  <button className="btn btn-danger" style={{flex:1}} onClick={()=>setSosStep(2)}>Build SOS Packet →</button>
                 </div>
               </div>
             )}
-
             {sosStep===2&&(
               <div>
                 <div className="form-label" style={{marginBottom:10}}>SOS Packet Preview:</div>
@@ -1060,62 +1086,44 @@ function SOSPage({sosStep,setSosStep,sosType,setSosType,symptoms,setSymptoms,set
                   <div>🚨 Type: {sosType?.replace('_',' ').toUpperCase()}</div>
                   <div>🩺 Symptoms: {symptoms.join(', ')||'None reported'}</div>
                   <div>🕐 {new Date().toLocaleString()}</div>
-                  <div>📡 Last QR: Namche Bazaar</div>
                 </div>
                 <div style={{display:'flex',gap:8}}>
                   <button className="btn btn-ghost" onClick={()=>setSosStep(1)}>← Back</button>
-                  <button className="btn btn-danger" style={{flex:1}} onClick={submitSOS}>
-                    🚨 Send Emergency SOS
-                  </button>
+                  <button className="btn btn-danger" style={{flex:1}} onClick={submitSOS}>🚨 Send Emergency SOS</button>
                 </div>
               </div>
             )}
           </div>
         </div>
-
         <div>
           <div className="section-title">First Aid Advice</div>
           {symptoms.includes('Headache')||symptoms.includes('Dizziness')||sosType==='altitude'?(
-            <div className="card" style={{border:'1.5px solid var(--gold)'}}>
+            <div className="card" style={{border:'1.5px solid var(--gold)',marginBottom:16}}>
               <div style={{fontFamily:'Syne,sans-serif',fontWeight:700,marginBottom:8,color:'var(--saffron)'}}>⚠️ AMS Likely Detected</div>
-              <div style={{fontSize:13,color:'var(--text2)',lineHeight:1.7,marginBottom:12}}>Based on your symptoms, you may be experiencing Acute Mountain Sickness.</div>
               {['Stop climbing immediately','Rest and breathe slowly','Drink 3–4L water today','Descend 300–500m if symptoms worsen','Do NOT take sleeping pills'].map(a=>(
                 <div key={a} style={{display:'flex',gap:8,padding:'6px 0',borderBottom:'1px solid var(--border)',fontSize:13}}>
-                  <i className="ti ti-point-filled" style={{fontSize:10,marginTop:4,flexShrink:0,color:'var(--crimson)'}}></i>
-                  {a}
+                  <i className="ti ti-point-filled" style={{fontSize:10,marginTop:4,flexShrink:0,color:'var(--crimson)'}}></i>{a}
                 </div>
               ))}
             </div>
           ):(
-            <div className="card">
-              <div style={{fontSize:13,color:'var(--text2)'}}>Select emergency type and symptoms to see first aid recommendations.</div>
-            </div>
+            <div className="card" style={{marginBottom:16}}><div style={{fontSize:13,color:'var(--text2)'}}>Select emergency type and symptoms to see recommendations.</div></div>
           )}
-
-          <div style={{marginTop:16}}>
-            <div className="section-title">Emergency Contacts</div>
-            {[
-              {name:'Nepal Police',num:'100',type:'Police'},
-              {name:'Tourist Police',num:'1144',type:'Tourism'},
-              {name:'Mountain Rescue',num:'+977-1-4700810',type:'Rescue'},
-              {name:'Helicopter SOS',num:'+977-9851135007',type:'Air'},
-            ].map(e=>(
-              <div key={e.name} className="card-sm" style={{marginBottom:8,display:'flex',alignItems:'center',gap:12}}>
-                <div style={{fontSize:20}}>{e.type==='Police'?'🚔':e.type==='Air'?'🚁':e.type==='Rescue'?'🏔️':'👮'}</div>
-                <div style={{flex:1}}>
-                  <div style={{fontSize:13,fontWeight:600}}>{e.name}</div>
-                  <div style={{fontSize:12,color:'var(--sky)',fontWeight:600}}>{e.num}</div>
-                </div>
-                <div className="tag tag-blue" style={{fontSize:10}}>{e.type}</div>
-              </div>
-            ))}
-          </div>
+          <div className="section-title">Emergency Contacts</div>
+          {[['Nepal Police','100','🚔','Police'],['Tourist Police','1144','👮','Tourism'],['Mountain Rescue','+977-1-4700810','🏔️','Rescue'],['Helicopter SOS','+977-9851135007','🚁','Air']].map(([n,num,ic,t])=>(
+            <div key={n} className="card-sm" style={{marginBottom:8,display:'flex',alignItems:'center',gap:12}}>
+              <div style={{fontSize:20}}>{ic}</div>
+              <div style={{flex:1}}><div style={{fontSize:13,fontWeight:600}}>{n}</div><div style={{fontSize:12,color:'var(--sky)',fontWeight:600}}>{num}</div></div>
+              <div className="tag tag-blue" style={{fontSize:10}}>{t}</div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
   );
 }
 
+// ── Feedback ──────────────────────────────────────────────────────────────
 function Feedback({feedbacks,setModal}){
   return(
     <div>
@@ -1125,13 +1133,12 @@ function Feedback({feedbacks,setModal}){
           <i className="ti ti-plus"></i> Add Feedback
         </button>
       </div>
-
       <div className="grid2">
         <div>
           <div className="card">
             {feedbacks.length===0?(
               <div className="empty-state">
-                <i className="ti ti-message-circle" style={{fontSize:48,opacity:0.3}}></i>
+                <i className="ti ti-message-circle"></i>
                 <div style={{fontFamily:'Syne,sans-serif',fontWeight:700,marginBottom:4}}>No feedback yet</div>
                 <div style={{fontSize:13}}>Share your trail experience</div>
               </div>
@@ -1164,9 +1171,7 @@ function Feedback({feedbacks,setModal}){
                 <div style={{fontSize:11,color:'var(--muted)'}}>{r.ago}</div>
               </div>
               <div style={{display:'flex',gap:8,alignItems:'center'}}>
-                <div className={`tag ${r.type==='amazing view'?'tag-green':r.type==='unsafe bridge'?'tag-red':'tag-orange'}`} style={{fontSize:11}}>
-                  {r.type}
-                </div>
+                <div className={`tag ${r.type==='amazing view'?'tag-green':r.type==='unsafe bridge'?'tag-red':'tag-orange'}`} style={{fontSize:11}}>{r.type}</div>
                 <div style={{fontSize:12,color:'var(--muted)'}}>by {r.user}</div>
               </div>
             </div>
@@ -1177,8 +1182,8 @@ function Feedback({feedbacks,setModal}){
   );
 }
 
+// ── Profile ───────────────────────────────────────────────────────────────
 function Profile({user,credits,bookings,visitedCheckpoints}){
-  const checkinCount = visitedCheckpoints.length;
   return(
     <div>
       <div className="grid2" style={{marginBottom:24}}>
@@ -1193,12 +1198,7 @@ function Profile({user,credits,bookings,visitedCheckpoints}){
             </div>
           </div>
           <div style={{display:'flex',gap:16,padding:'12px 0',borderTop:'1px solid var(--border)'}}>
-            {[
-              {label:'Credits',val:`💠 ${credits}`},
-              {label:'Check-ins',val:checkinCount},
-              {label:'Treks',val:'2'},
-              {label:'Bookings',val:bookings.length},
-            ].map(s=>(
+            {[{label:'Credits',val:`💠 ${credits}`},{label:'Check-ins',val:visitedCheckpoints.length},{label:'Treks',val:'2'},{label:'Bookings',val:bookings.length}].map(s=>(
               <div key={s.label} style={{flex:1,textAlign:'center'}}>
                 <div style={{fontFamily:'Syne,sans-serif',fontWeight:700,fontSize:18}}>{s.val}</div>
                 <div style={{fontSize:11,color:'var(--muted)'}}>{s.label}</div>
@@ -1206,7 +1206,6 @@ function Profile({user,credits,bookings,visitedCheckpoints}){
             ))}
           </div>
         </div>
-
         <div className="card">
           <div className="section-title" style={{fontSize:15,marginBottom:12}}>Visited Places</div>
           {['Kathmandu Durbar Square','Namche Bazaar','Tengboche','Pokhara Lakeside'].map(p=>(
@@ -1218,12 +1217,11 @@ function Profile({user,credits,bookings,visitedCheckpoints}){
           ))}
         </div>
       </div>
-
       <div className="section-title">Achievements</div>
       <div className="grid2" style={{marginBottom:24}}>
         {[
-          {icon:'🏔️',name:'Everest Explorer',desc:'Reached Namche Bazaar on EBC route',earned:true},
-          {icon:'🌅',name:'Sunrise Hunter',desc:'Checked in before 6am at a peak',earned:true},
+          {icon:'🏔️',name:'Everest Explorer',desc:'Reached Namche Bazaar on EBC route',earned:visitedCheckpoints.includes('namche')},
+          {icon:'🌅',name:'Sunrise Hunter',desc:'Checked in before 6am at a peak',earned:visitedCheckpoints.length>=3},
           {icon:'🍜',name:'Dal Bhat Power',desc:'Ate dal bhat 5 times on trek',earned:true},
           {icon:'🆘',name:'Safety First',desc:'Completed SOS registration',earned:false},
           {icon:'📸',name:'Trail Photographer',desc:'Submitted 10 trail photos',earned:false},
@@ -1241,27 +1239,16 @@ function Profile({user,credits,bookings,visitedCheckpoints}){
           </div>
         ))}
       </div>
-
       <div className="section-title">Booking History</div>
       {bookings.length===0?(
-        <div className="card">
-          <div className="empty-state">
-            <i className="ti ti-calendar" style={{fontSize:36,opacity:0.3}}></i>
-            <div>No bookings yet</div>
-          </div>
-        </div>
+        <div className="card"><div className="empty-state"><i className="ti ti-calendar"></i><div>No bookings yet</div></div></div>
       ):(
         <div style={{display:'grid',gap:10}}>
           {bookings.map(b=>(
             <div key={b.id} className="card-sm" style={{display:'flex',gap:12,alignItems:'center'}}>
               <div style={{fontSize:28}}>{b.emoji||'📋'}</div>
-              <div style={{flex:1}}>
-                <div style={{fontWeight:600,fontSize:13}}>{b.name}</div>
-                <div style={{fontSize:11,color:'var(--muted)'}}>{b.date}</div>
-              </div>
-              <div className={`tag ${b.type==='transport'?'tag-blue':b.type==='guide'?'tag-green':'tag-orange'}`}>
-                {b.type}
-              </div>
+              <div style={{flex:1}}><div style={{fontWeight:600,fontSize:13}}>{b.name}</div><div style={{fontSize:11,color:'var(--muted)'}}>{b.date}</div></div>
+              <div className={`tag ${b.type==='transport'?'tag-blue':b.type==='guide'?'tag-green':'tag-orange'}`}>{b.type}</div>
             </div>
           ))}
         </div>
@@ -1270,9 +1257,9 @@ function Profile({user,credits,bookings,visitedCheckpoints}){
   );
 }
 
+// ── Modal Layer ────────────────────────────────────────────────────────────
 function ModalLayer({modal,setModal,submitFeedback}){
   const [feedbackData,setFeedbackData]=useState({location:'',rating:5,comment:'',condition:''});
-
   if(modal.type==='booked'){
     return(
       <div className="modal-backdrop" onClick={()=>setModal(null)}>
@@ -1283,17 +1270,14 @@ function ModalLayer({modal,setModal,submitFeedback}){
           </div>
           <div className="alert alert-success">
             <i className="ti ti-check"></i>
-            <div><strong>{modal.item.name}</strong> has been booked for <strong>{modal.item.price||modal.item.price}</strong></div>
+            <div><strong>{modal.item.name}</strong> — {modal.item.price||''}</div>
           </div>
-          <div style={{fontSize:13,color:'var(--muted)',marginBottom:20,textAlign:'center'}}>
-            Booking ID: #{modal.ref||'NT'+Math.floor(Math.random()*100000)}
-          </div>
+          <div style={{fontSize:13,color:'var(--muted)',marginBottom:20,textAlign:'center'}}>Booking ID: #{modal.ref||'NT'+Math.floor(Math.random()*100000)}</div>
           <button className="btn btn-primary" style={{width:'100%'}} onClick={()=>setModal(null)}>Done</button>
         </div>
       </div>
     );
   }
-
   if(modal.type==='sos_sent'){
     return(
       <div className="modal-backdrop">
@@ -1301,22 +1285,15 @@ function ModalLayer({modal,setModal,submitFeedback}){
           <div style={{textAlign:'center',marginBottom:20}}>
             <div style={{fontSize:56,marginBottom:8}}>🚨</div>
             <div className="modal-title">SOS Packet Queued</div>
-            <div className="modal-sub">Your emergency packet has been saved offline and will transmit automatically when signal is found.</div>
+            <div className="modal-sub">Saved offline. Will transmit automatically when signal found.</div>
           </div>
-          <div className="alert alert-danger">
-            <i className="ti ti-broadcast"></i>
-            <div>Searching for relay: nearby tea houses, Bluetooth mesh, and cellular</div>
-          </div>
-          <div style={{fontSize:13,color:'var(--text2)',marginBottom:20}}>
-            🏥 Nearest medical: Pheriche Aid Post (4.2 km)<br/>
-            🚁 Helicopter: Lukla (weather permitting)
-          </div>
+          <div className="alert alert-danger"><i className="ti ti-broadcast"></i><div>Searching for relay: nearby tea houses, Bluetooth mesh, cellular</div></div>
+          <div style={{fontSize:13,color:'var(--text2)',marginBottom:20}}>🏥 Nearest medical: Pheriche Aid Post (4.2 km)<br/>🚁 Helicopter: Lukla (weather permitting)</div>
           <button className="btn btn-danger" style={{width:'100%'}} onClick={()=>setModal(null)}>OK — Stay Calm</button>
         </div>
       </div>
     );
   }
-
   if(modal.type==='add_feedback'){
     return(
       <div className="modal-backdrop" onClick={()=>setModal(null)}>
@@ -1325,25 +1302,20 @@ function ModalLayer({modal,setModal,submitFeedback}){
           <div className="modal-sub">Help other trekkers by sharing your experience</div>
           <div className="form-group">
             <label className="form-label">Location</label>
-            <input className="input" placeholder="e.g. Namche Bazaar, Tengboche Trail..." value={feedbackData.location} onChange={e=>setFeedbackData({...feedbackData,location:e.target.value})}/>
+            <input className="input" placeholder="e.g. Namche Bazaar..." value={feedbackData.location} onChange={e=>setFeedbackData({...feedbackData,location:e.target.value})}/>
           </div>
           <div className="form-group">
             <label className="form-label">Rating</label>
             <div style={{display:'flex',gap:8}}>
-              {[1,2,3,4,5].map(r=>(
-                <button key={r} className="btn btn-ghost" style={{padding:'6px 10px',color:feedbackData.rating>=r?'var(--gold)':'var(--muted)'}} onClick={()=>setFeedbackData({...feedbackData,rating:r})}>★</button>
-              ))}
+              {[1,2,3,4,5].map(r=>(<button key={r} className="btn btn-ghost" style={{padding:'6px 10px',color:feedbackData.rating>=r?'var(--gold)':'var(--muted)'}} onClick={()=>setFeedbackData({...feedbackData,rating:r})}>★</button>))}
             </div>
           </div>
           <div className="form-group">
             <label className="form-label">Trail Condition</label>
             <select className="input" value={feedbackData.condition} onChange={e=>setFeedbackData({...feedbackData,condition:e.target.value})}>
               <option value="">Select condition</option>
-              <option>Amazing view</option>
-              <option>Crowded</option>
-              <option>Unsafe bridge</option>
-              <option>Landslide risk</option>
-              <option>Good trail</option>
+              <option>Amazing view</option><option>Crowded</option><option>Unsafe bridge</option>
+              <option>Landslide risk</option><option>Good trail</option>
             </select>
           </div>
           <div className="form-group">
@@ -1352,35 +1324,12 @@ function ModalLayer({modal,setModal,submitFeedback}){
           </div>
           <div style={{display:'flex',gap:8}}>
             <button className="btn btn-ghost" onClick={()=>setModal(null)}>Cancel</button>
-            <button className="btn btn-primary" style={{flex:1}} disabled={!feedbackData.location} onClick={()=>submitFeedback(feedbackData)}>
-              Submit Feedback
-            </button>
+            <button className="btn btn-primary" style={{flex:1}} disabled={!feedbackData.location} onClick={()=>submitFeedback(feedbackData)}>Submit Feedback</button>
           </div>
         </div>
       </div>
     );
   }
-
-  if(modal.type==='mappin'){
-    const d=modal.data;
-    return(
-      <div className="modal-backdrop" onClick={()=>setModal(null)}>
-        <div className="modal" onClick={e=>e.stopPropagation()}>
-          <div style={{fontSize:40,marginBottom:8}}>{d.icon}</div>
-          <div className="modal-title">{d.label}</div>
-          <div className="modal-sub">{d.type==='hotel'?'Accommodation Available':d.type==='medical'?'Medical Facility':d.type==='danger'?'Risk Zone':'Summit Point'}</div>
-          {d.type==='danger'&&(
-            <div className="alert alert-danger">
-              <i className="ti ti-alert-triangle"></i>
-              <div>High altitude risk zone. Acclimatize before proceeding.</div>
-            </div>
-          )}
-          <button className="btn btn-primary" style={{width:'100%',marginTop:8}} onClick={()=>setModal(null)}>Close</button>
-        </div>
-      </div>
-    );
-  }
-
   return null;
 }
 
