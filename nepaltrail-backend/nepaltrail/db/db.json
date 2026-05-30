@@ -1,0 +1,63 @@
+{
+  "users": [
+    {
+      "id": "user_1",
+      "name": "Maya Gurung",
+      "avatar": "MG",
+      "rank": "Mountain Navigator",
+      "credits": 420,
+      "checkins": 7,
+      "treks": 2,
+      "visited_places": ["Kathmandu Durbar Square", "Namche Bazaar", "Tengboche", "Pokhara Lakeside"]
+    }
+  ],
+  "bookings": [],
+  "feedbacks": [
+    {
+      "id": "fb_1",
+      "user": "Jens H.",
+      "location": "Namche–Tengboche Trail",
+      "condition": "Amazing view",
+      "rating": 5,
+      "comment": "Absolutely breathtaking scenery. Recommend starting early.",
+      "date": "2025-05-28"
+    },
+    {
+      "id": "fb_2",
+      "user": "Sarah M.",
+      "location": "Dingboche",
+      "condition": "Crowded",
+      "rating": 3,
+      "comment": "Very busy at this time of year.",
+      "date": "2025-05-28"
+    },
+    {
+      "id": "fb_3",
+      "user": "Raj K.",
+      "location": "Pheriche Bridge",
+      "condition": "Unsafe bridge",
+      "rating": 2,
+      "comment": "Bridge looks worn. Exercise caution.",
+      "date": "2025-05-27"
+    }
+  ],
+  "sos_alerts": [],
+  "qr_checkins": [
+    {
+      "id": "qr_1",
+      "user_id": "user_1",
+      "location_id": "namche",
+      "location_name": "Namche Bazaar",
+      "altitude": "3,440m",
+      "credits_earned": 20,
+      "date": "2025-05-25"
+    }
+  ],
+  "checkin_locations": [
+    {"id": "namche",    "name": "Namche Bazaar",      "alt": "3,440m", "credits": 20,  "type": "checkpoint"},
+    {"id": "tengboche", "name": "Tengboche Monastery", "alt": "3,860m", "credits": 25,  "type": "checkpoint"},
+    {"id": "dingboche", "name": "Dingboche",           "alt": "4,410m", "credits": 30,  "type": "checkpoint"},
+    {"id": "lobuche",   "name": "Lobuche",             "alt": "4,940m", "credits": 35,  "type": "checkpoint"},
+    {"id": "ebc",       "name": "Everest Base Camp",   "alt": "5,364m", "credits": 100, "type": "summit"}
+  ]
+}
